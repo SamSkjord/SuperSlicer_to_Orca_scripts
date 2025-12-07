@@ -1,6 +1,10 @@
 # Profile and Configuration Converter (SuperSlicer/PrusaSlicer to OrcaSlicer)
 
-This is a Perl script that will convert printer, print, and filament profile settings from PrusaSlicer and SuperSlicer INI files to JSON format for use with OrcaSlicer. 
+This repository contains scripts that convert printer, print, and filament profile settings from PrusaSlicer and SuperSlicer INI files to JSON format for use with OrcaSlicer.
+
+**Available in two versions:**
+- **Perl** (`superslicer_to_orca.pl`) - Original version
+- **Python** (`superslicer_to_orca.py`) - Python port with no external dependencies
 
 ## Table of Contents
 
@@ -18,7 +22,7 @@ This is a Perl script that will convert printer, print, and filament profile set
 
 - Converts PrusaSlicer and SuperSlicer printer, print, and filament INI files to OrcaSlicer JSON
 - Can convert an entire config bundle using the `--input` option
-- Interactive mode autodetecs your SuperSlicer, PrusaSlicer, and OrcaSlicer installations and asks you what you want to convert
+- Interactive mode autodetects your SuperSlicer, PrusaSlicer, and OrcaSlicer installations and asks you what you want to convert
 - Advanced mode uses command-line options to specify parameters and can be used to batch-process multiple files without user interaction
 - Supports wildcard input patterns to batch process multiple files at once
 - Autodetects the type of the input config file and converts it appropriately
@@ -50,6 +54,13 @@ This is a Perl script that will convert printer, print, and filament profile set
 
 ## Requirements
 
+### Python Version (Recommended)
+
+- Python 3.7 or later
+- No external dependencies required (uses only Python standard library)
+
+### Perl Version
+
 - Perl 5.10 or later
 - The following Perl modules:
   - Getopt::Long
@@ -65,6 +76,25 @@ This is a Perl script that will convert printer, print, and filament profile set
   - JSON::XS
 
 ## Installation
+
+### Python Version
+
+1. Make sure you have Python 3.7+ installed:
+
+    ```
+    python3 --version
+    ```
+
+2. Clone this repository:
+
+    ```
+    git clone https://github.com/theophile/SuperSlicer_to_Orca_scripts.git
+    cd SuperSlicer_to_Orca_scripts
+    ```
+
+3. That's it! No additional dependencies needed.
+
+### Perl Version
 
 1. Make sure you have Perl installed on your system. You can check the version by running the following command:
 
@@ -87,6 +117,45 @@ This is a Perl script that will convert printer, print, and filament profile set
     ```
 
 ## Usage
+
+### Python Version
+
+For interactive mode, run the script with no command-line options:
+```
+python3 superslicer_to_orca.py
+```
+
+The script will guide you through selecting which profiles to convert.
+
+For batch processing with command-line options:
+
+```
+python3 superslicer_to_orca.py --input <PATTERN> --outdir <DIRECTORY> [OPTIONS]
+```
+
+**Examples:**
+
+Convert a single file:
+```
+python3 superslicer_to_orca.py --input myprofile.ini
+```
+
+Batch convert all filament profiles (Linux/macOS):
+```
+python3 superslicer_to_orca.py --input ~/.config/SuperSlicer/filament/*.ini --on-existing skip
+```
+
+Batch convert all filament profiles (Windows):
+```
+python superslicer_to_orca.py --input "C:\Users\%USERNAME%\AppData\Roaming\SuperSlicer\filament\*.ini" --on-existing skip
+```
+
+Convert a config bundle:
+```
+python3 superslicer_to_orca.py --input config_bundle.ini --nozzle-size 0.4
+```
+
+### Perl Version
 
 For interactive mode, run the `superslicer_to_orca.pl` script with no command-line options:
 ```
@@ -118,28 +187,23 @@ Then rerun the script. It will prompt you to select from the detected "physical 
 
 ## Command-Line Options
 
-The script accepts the following command-line options:
+Both versions support the same command-line options:
 
-- `--input <PATTERN>`: Specifies the input PrusaSlicer or SuperSlicer INI file(s). Use this option to bypass the interactive profile selector. You can use wildcards to specify multiple files. (Optional)
-- `--outdir <DIRECTORY>`: Specifies the ROOT OrcaSlicer settings directory. (Optional) If this is not specified, the script will default to the typical location, which is:
-  - in Windows:
-    ```
-    C:\Users\%USERNAME%\AppData\Roaming\OrcaSlicer
-    ```
-  - in MacOS:
-    ```
-    ~/Library/Application Support/OrcaSlicer
-    ```
-  - in Linux:
-    ```
-    ~/.config/OrcaSlicer
-    ```
-- `--nozzle-size <DECIMAL>`: For print profiles, specifies the diameter (in mm) of the nozzle the print profile is intended to be used with (e.g. --nozzle-size 0.4). If this is not specified, the script will prompt you to enter a nozzle size when converting print profiles. (Optional)
-- `--physical-printer <PATTERN>`: Specifies the INI file for the corresponding "physical printer" when converting printer config files. If this option is not used, the script will give you a choice among detected "physical printer" profiles. See [A Note About Printer Profiles](#a-note-about-printer-profiles) for more information. (Optional)
-- `--on-existing <CHOICE>`: Forces the behavior when an output file already exists. Valid choices are: `skip` to leave all existing files alone, `overwrite` to overwrite all existing output files, and `merge` to merge new key/value pairs into all existing output files while leaving existing key/value pairs unmodified. (Optional)
-- `--force-output`: Forces the script to output the converted JSON files to the output directory specified with `--outdir`. Use this option if you do not want the new files to be placed in your OrcaSlicer settings folder. (Optional)
-- `-h`, `--help`: Displays usage information.
+| Option | Description |
+|--------|-------------|
+| `--input <PATTERN>`, `-i` | Specifies the input PrusaSlicer or SuperSlicer INI file(s). Use this option to bypass the interactive profile selector. You can use wildcards to specify multiple files. (Optional) |
+| `--outdir <DIRECTORY>`, `-o` | Specifies the ROOT OrcaSlicer settings directory. Defaults to the typical location for your OS. (Optional) |
+| `--nozzle-size <DECIMAL>` | For print profiles, specifies the diameter (in mm) of the nozzle the print profile is intended to be used with (e.g. --nozzle-size 0.4). If not specified, the script will prompt you when converting print profiles. (Optional) |
+| `--physical-printer <PATTERN>` | Specifies the INI file for the corresponding "physical printer" when converting printer config files. (Optional) |
+| `--on-existing <CHOICE>` | Behavior when output file already exists: `skip` to leave existing files alone, `overwrite` to replace them, or `merge` to add new parameters while keeping existing ones. (Optional) |
+| `--force-output` | Forces the script to output converted JSON files directly to the `--outdir` directory without subdirectories. (Optional) |
+| `-h`, `--help` | Displays usage information. |
 
+**Default OrcaSlicer directories by OS:**
+
+- **Windows:** `C:\Users\%USERNAME%\AppData\Roaming\OrcaSlicer`
+- **macOS:** `~/Library/Application Support/OrcaSlicer`
+- **Linux:** `~/.config/OrcaSlicer`
 
 ## Contributing
 
@@ -148,5 +212,3 @@ Contributions to this project are welcome! If you find any issues or have sugges
 ## License
 
 This script is licensed under the GNU General Public License v3.0.
-
-
